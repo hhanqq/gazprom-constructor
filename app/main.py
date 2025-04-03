@@ -5,9 +5,10 @@ from datetime import timedelta
 import uvicorn
 from sqlalchemy.orm import Session
 
-from app.models import User, Base
+from app.models import User, Base, Service, Departament, Group
 from app.database import engine
-from app.schemas import UserCreate, UserOut, Token
+from app.schemas import UserCreate, UserOut, Token, ServiceCreate, ServiceSchema, DepartmentCreate, GroupCreate, \
+    GroupSchema, DepartmentSchema
 from app.auth import (
     get_db,
     authenticate_user,
@@ -67,7 +68,7 @@ async def register(
     db.refresh(db_user)
     return db_user
 
-@app.post("/token", response_model=Token)
+@app.post("/login", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
@@ -81,7 +82,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"email": user.email},  # Используем email в данных токена
+        data={"email": user.email},
         expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
@@ -91,6 +92,90 @@ async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     return current_user
+
+
+@app.post("/services/", response_model=ServiceSchema)
+async def create_service(
+    service: ServiceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    db_service = Service(name=service.name)
+    db.add(db_service)
+    db.commit()
+    db.refresh(db_service)
+    return db_service
+
+
+@app.post("/departments/", response_model=DepartmentSchema)
+async def create_department(
+        department: DepartmentCreate,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_active_user)
+):
+
+    db_service = db.query(Service).filter(Service.service_id == department.service_id).first()
+    if not db_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    db_department = Departament(
+        name=department.name,
+        service_id=department.service_id
+    )
+    db.add(db_department)
+    db.commit()
+    db.refresh(db_department)
+    return db_department
+
+
+@app.post("/groups/", response_model=GroupSchema)
+async def create_group(
+        group: GroupCreate,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_active_user)
+):
+
+    db_department = db.query(Departament).filter(Departament.depart_id == group.depart_id).first()
+    if not db_department:
+        raise HTTPException(status_code=404, detail="Department not found")
+
+    db_group = Group(
+        name=group.name,
+        depart_id=group.depart_id
+    )
+    db.add(db_group)
+    db.commit()
+    db.refresh(db_group)
+    return db_group
+
+
+@app.get("/services/", response_model=list[ServiceSchema])
+async def read_services(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    services = db.query(Service).offset(skip).limit(limit).all()
+    return services
+
+@app.get("/departments/", response_model=list[DepartmentSchema])
+async def read_departments(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    departments = db.query(Departament).offset(skip).limit(limit).all()
+    return departments
+
+@app.get("/groups/", response_model=list[GroupSchema])
+async def read_groups(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    groups = db.query(Group).offset(skip).limit(limit).all()
+    return groups
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

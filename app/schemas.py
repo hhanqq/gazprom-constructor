@@ -62,25 +62,37 @@ class TokenData(BaseModel):
 
 
 class ServiceSchema(BaseModel):
-    id: int
+    service_id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+class DepartmentSchema(BaseModel):
+    depart_id: int
     name: str
     service_id: int
 
     class Config:
         orm_mode = True
 
-class DepartmentSchema(BaseModel):
-    id: int
+class GroupSchema(BaseModel):
+    group_id: int
     name: str
     depart_id: int
 
     class Config:
         orm_mode = True
 
-class GroupSchema(BaseModel):
-    id: int
-    name: str
-    group_id: int
 
-    class Config:
-        orm_mode = True
+
+class ServiceCreate(BaseModel):
+    name: str
+
+class DepartmentCreate(BaseModel):
+    name: str
+    service_id: int
+
+class GroupCreate(BaseModel):
+    name: str
+    depart_id: int
