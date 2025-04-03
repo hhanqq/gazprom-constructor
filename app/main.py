@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.models import User, Base, Service, Departament, Group
 from app.database import engine
-from app.schemas import UserCreate, UserOut, Token, ServiceCreate, ServiceSchema, DepartmentCreate, GroupCreate, \
-    GroupSchema, DepartmentSchema
+from app.schemas import UserCreate, UserOut, Token, ServiceSchema, \
+    GroupSchema, DepartmentSchema, UserGroupUpdate, GroupWithUsers, DepartmentCreate, ServiceCreate, GroupCreate
 from app.auth import (
     get_db,
     authenticate_user,
@@ -176,6 +176,64 @@ async def read_groups(
     groups = db.query(Group).offset(skip).limit(limit).all()
     return groups
 
+
+@app.get("/groups/{group_id}/users", response_model=GroupWithUsers)
+async def get_group_with_users(
+        group_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_active_user)
+):
+    db_group = db.query(Group).filter(Group.group_id == group_id).first()
+    if not db_group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+
+    users = db.query(User).filter(User.group_id == group_id).all()
+
+    group_data = {
+        "group_id": db_group.group_id,
+        "name": db_group.name,
+        "depart_id": db_group.depart_id,
+        "users": users
+    }
+
+    return group_data
+
+
+@app.put("/users/{user_id}/group", response_model=UserOut)
+async def update_user_group(
+        user_id: int,
+        group_update: UserGroupUpdate,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_active_user)
+):
+    if current_user.role not in ["ADMIN", "HR"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only ADMIN or HR can change user groups"
+        )
+
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if group_update.group_id is not None:
+        db_group = db.query(Group).filter(Group.group_id == group_update.group_id).first()
+        if not db_group:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Group not found"
+            )
+
+    db_user.group_id = group_update.group_id
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
