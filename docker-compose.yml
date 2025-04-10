@@ -1,4 +1,15 @@
 services:
+  bot:
+    build: .
+    ports:
+      - "8001:8000"  # Порт для вебхуков
+    environment:
+      - BOT_TOKEN=7978079024:AAEMjRp68zWXbLtV5W4zjqcXQfEyQCzTAwI
+      - WEBHOOK_URL=https://d80vzq-188-162-12-160.ru.tuna.am/webhook
+    depends_on:
+      - db
+    restart: unless-stopped
+
   db:
     image: postgres:15
     environment:

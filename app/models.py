@@ -59,3 +59,10 @@ class User(Base):
     group = relationship("Group", back_populates="users")
 
 
+class Request(Base):
+    __tablename__ = "requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    tags = Column(ARRAY(String), nullable=False)

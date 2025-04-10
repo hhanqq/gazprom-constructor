@@ -121,3 +121,18 @@ class GroupSchema(GroupBase):
 
 class GroupWithUsers(GroupSchema):
     users: List[UserOut] = Field(default_factory=list)
+
+
+
+class ServiceUpdate(BaseModel):
+    name: str = Field(..., example="Updated Service Name")
+
+class DepartmentUpdate(BaseModel):
+    name: str = Field(..., example="Updated Department Name")
+
+class GroupUpdate(BaseModel):
+    name: str = Field(..., example="Updated Group Name")
+
+
+class UserDisabledUpdate(BaseModel):
+    disabled: bool = Field(..., example=True)
