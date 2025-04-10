@@ -46,7 +46,6 @@ dp = Dispatcher()
 
 def parse_application(text: str) -> Optional[dict]:
     try:
-        # Используем регулярные выражения для извлечения данных
         title_match = re.search(r'title:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
         desc_match = re.search(r'description:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
         tags_match = re.search(r'tags:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
@@ -54,7 +53,6 @@ def parse_application(text: str) -> Optional[dict]:
         if not all([title_match, desc_match, tags_match]):
             return None
 
-        # Очистка и обработка тегов
         tags = [tag.strip() for tag in tags_match.group(1).split(',') if tag.strip()]
 
         return {

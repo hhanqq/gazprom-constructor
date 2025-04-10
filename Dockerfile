@@ -5,24 +5,19 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
-# Финальный образ
 FROM python:3.12-slim
 
-# Установка зависимостей для psycopg2 и netcat (без python3-pip)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libpq-dev \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Копируем установленные пакеты из builder
 COPY --from=builder /root/.local /root/.local
 
-# Копируем исходный код
 COPY . /app
 WORKDIR /app
 
-# Настройка окружения (используем python вместо pip)
 ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONPATH=/app
 
