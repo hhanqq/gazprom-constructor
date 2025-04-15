@@ -31,107 +31,107 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 # Настройки
-BOT_TOKEN = "7978079024:AAEMjRp68zWXbLtV5W4zjqcXQfEyQCzTAwI"
-WEBHOOK_PATH = "/webhook"
-WEBHOOK_URL = "https://d80vzq-188-162-12-160.ru.tuna.am" + WEBHOOK_PATH
-WEBAPP_HOST = "0.0.0.0"
-WEBAPP_PORT = 8000
+# BOT_TOKEN = "7978079024:AAEMjRp68zWXbLtV5W4zjqcXQfEyQCzTAwI"
+# WEBHOOK_PATH = "/webhook"
+# WEBHOOK_URL = "https://d80vzq-188-162-12-160.ru.tuna.am" + WEBHOOK_PATH
+# WEBAPP_HOST = "0.0.0.0"
+# WEBAPP_PORT = 8000
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-
-
-def parse_application(text: str) -> Optional[dict]:
-    try:
-        title_match = re.search(r'title:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
-        desc_match = re.search(r'description:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
-        tags_match = re.search(r'tags:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
-
-        if not all([title_match, desc_match, tags_match]):
-            return None
-
-        tags = [tag.strip() for tag in tags_match.group(1).split(',') if tag.strip()]
-
-        return {
-            'title': title_match.group(1).strip(),
-            'description': desc_match.group(1).strip(),
-            'tags': tags
-        }
-    except Exception as e:
-        logger.error(f"Parse error: {e}")
-        return None
-
-
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    help_text = (
-        "📝 Отправьте заявку в формате:\n\n"
-        "title: Ваш заголовок\n"
-        "description: Ваше описание\n"
-        "tags: тег1, тег2\n\n"
-        "Пример:\n"
-        "title: Проблема с доступом\n"
-        "description: Не могу зайти в систему\n"
-        "tags: доступ, авторизация"
-    )
-    await message.answer(help_text)
-
-
-@dp.message(F.text)
-async def handle_application(
-        message: types.Message,
-        db: Session = Depends(get_db)
-):
-    user_input = message.text
-    parsed_data = parse_application(user_input)
-
-    if not parsed_data:
-        await message.answer(
-            "❌ Неверный формат заявки. Используйте:\n\n"
-            "title: ...\ndescription: ...\ntags: ..."
-        )
-        return
-
-    try:
-        # Сохранение в базу
-        db_request = RequestModel(
-            title=parsed_data['title'],
-            description=parsed_data['description'],
-            tags=parsed_data['tags'],
-            user_id=message.from_user.id,
-            raw_text=user_input,
-            status="new"
-        )
-
-        db.add(db_request)
-        db.commit()
-
-        await message.answer(
-            "✅ Заявка принята!\n\n"
-            f"Заголовок: {parsed_data['title']}\n"
-            f"Описание: {parsed_data['description']}\n"
-            f"Теги: {', '.join(parsed_data['tags'])}"
-        )
-    except Exception as e:
-        logger.error(f"Database error: {e}")
-        await message.answer("⚠️ Ошибка при сохранении заявки")
-
-
-@app.post(WEBHOOK_PATH)
-async def bot_webhook(update: dict):
-    telegram_update = types.Update(**update)
-    await dp.feed_update(bot=bot, update=telegram_update)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await bot.delete_webhook(drop_pending_updates=True)
-    await bot.set_webhook(WEBHOOK_URL)
-    yield
-    await bot.session.close()
+# bot = Bot(token=BOT_TOKEN)
+# dp = Dispatcher()
+#
+#
+# def parse_application(text: str) -> Optional[dict]:
+#     try:
+#         title_match = re.search(r'title:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
+#         desc_match = re.search(r'description:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
+#         tags_match = re.search(r'tags:\s*(.+?)(?=\n|$)', text, re.IGNORECASE)
+#
+#         if not all([title_match, desc_match, tags_match]):
+#             return None
+#
+#         tags = [tag.strip() for tag in tags_match.group(1).split(',') if tag.strip()]
+#
+#         return {
+#             'title': title_match.group(1).strip(),
+#             'description': desc_match.group(1).strip(),
+#             'tags': tags
+#         }
+#     except Exception as e:
+#         logger.error(f"Parse error: {e}")
+#         return None
+#
+#
+# @dp.message(Command("start"))
+# async def cmd_start(message: types.Message):
+#     help_text = (
+#         "📝 Отправьте заявку в формате:\n\n"
+#         "title: Ваш заголовок\n"
+#         "description: Ваше описание\n"
+#         "tags: тег1, тег2\n\n"
+#         "Пример:\n"
+#         "title: Проблема с доступом\n"
+#         "description: Не могу зайти в систему\n"
+#         "tags: доступ, авторизация"
+#     )
+#     await message.answer(help_text)
+#
+#
+# @dp.message(F.text)
+# async def handle_application(
+#         message: types.Message,
+#         db: Session = Depends(get_db)
+# ):
+#     user_input = message.text
+#     parsed_data = parse_application(user_input)
+#
+#     if not parsed_data:
+#         await message.answer(
+#             "❌ Неверный формат заявки. Используйте:\n\n"
+#             "title: ...\ndescription: ...\ntags: ..."
+#         )
+#         return
+#
+#     try:
+#         # Сохранение в базу
+#         db_request = RequestModel(
+#             title=parsed_data['title'],
+#             description=parsed_data['description'],
+#             tags=parsed_data['tags'],
+#             user_id=message.from_user.id,
+#             raw_text=user_input,
+#             status="new"
+#         )
+#
+#         db.add(db_request)
+#         db.commit()
+#
+#         await message.answer(
+#             "✅ Заявка принята!\n\n"
+#             f"Заголовок: {parsed_data['title']}\n"
+#             f"Описание: {parsed_data['description']}\n"
+#             f"Теги: {', '.join(parsed_data['tags'])}"
+#         )
+#     except Exception as e:
+#         logger.error(f"Database error: {e}")
+#         await message.answer("⚠️ Ошибка при сохранении заявки")
+#
+#
+# @app.post(WEBHOOK_PATH)
+# async def bot_webhook(update: dict):
+#     telegram_update = types.Update(**update)
+#     await dp.feed_update(bot=bot, update=telegram_update)
+#
+#
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     await bot.delete_webhook(drop_pending_updates=True)
+#     await bot.set_webhook(WEBHOOK_URL)
+#     yield
+#     await bot.session.close()
 
 
 
