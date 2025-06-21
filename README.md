@@ -152,9 +152,4 @@ docker-compose up --build
 
 ---
 
-## 📌 Лицензия
-
-MIT License — см. [LICENSE](LICENSE)
-
----
 
