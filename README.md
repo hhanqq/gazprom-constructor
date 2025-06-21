@@ -149,16 +149,6 @@ BOT_TOKEN=your_bot_token
 docker-compose up --build
 ```
 
----
-
-## ✅ Возможности для доработки
-
-- Реализовать очередь задач (например, Celery).
-- Добавить тесты (pytest).
-- Улучшить систему уведомлений (email, push).
-- Внедрить RBAC на уровне БД.
-- Добавить документацию Swagger / ReDoc.
-- Подключить CI/CD (GitHub Actions / GitLab CI).
 
 ---
 
